@@ -1,0 +1,260 @@
+
+ Program  MARK  - Survival Rate Estimation with Capture-Recapture Data
+ gfortran(dble/PIM2) Vers. 11.1 Nov 2024   7-Mar-2026 16:49:27    Page  001
+  
+ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ 
+ Welcome to MARK localuser on machine DEP79421 in subdirectory 
+ "C:\Users\localuser\Desktop\GitHub\LHI_SBSH_CMR_adult_survival" running file "data/rmark_outputs/covariate_models/2026-03-07/quadratic_covariate_model_ENSO_jul_aug_sep.inp".
+ This version was compiled by GCC version 14.2.0 using the options: 
+  -cpp -iprefix C:/tdm-gcc-64/mingw64-14-2/bin/../lib/gcc/
+  x86_64-w64-mingw32/14.2.0/ -D_MT -D_REENTRANT -U_REENTRANT -D
+  dbleprecision -m64 -march=x86-64 -mtune=generic -mthreads -O3 -std=f2023
+  -fimplicit-none -ffpe-summary=invalid,zero,overflow,underflow
+  -funroll-loops -fno-unsafe-math-optimizations -frounding-math
+  -fsignaling-nans -fall-intrinsics -fopenmp
+
+ This problem will use 19 of 20 possible threads.
+ Static thread allocation is used.
+ INPUT --- proc title ;
+
+ For procedure title CPU Time was 0.001 secs and System Time was 0.001 secs.
+ INPUT --- proc chmatrix occasions= 12 groups= 1 etype= Live Nodes= 
+ INPUT --- 101 ICMeans NoHist hist= 25  ;
+ INPUT ---    time interval 1 1 1 1 1 1 1 1 1 1 1 ;
+ INPUT ---    glabel(1)=Group 1;
+
+      Number of unique encounter histories read was 25.
+
+      Number of individual covariates read was 0.
+      Time interval lengths are all equal to 1.
+
+      Data type number is 1
+      Data type is Live Recaptures (CJS)
+
+ For procedure chmatrix CPU Time was 0.001 secs and System Time was 0.001 secs.
+
+Program  MARK  - Survival Rate Estimation with Capture-Recapture Data
+ gfortran(dble/PIM2) Vers. 11.1 Nov 2024   7-Mar-2026 16:49:27    Page  002
+ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ 
+
+
+ INPUT --- proc estimate link=Logit NOLOOP varest=2ndPart    ;
+ INPUT --- model={ model_ENSO_jul_aug_sep };
+ INPUT ---    group=1 Phi    rows=11 cols=11 Triang ;
+ INPUT ---        1 2 3 4 5 6 2 7 4 8 9 ;
+ INPUT ---        2 3 4 5 6 2 7 4 8 9 ;
+ INPUT ---        3 4 5 6 2 7 4 8 9 ;
+ INPUT ---        4 5 6 2 7 4 8 9 ;
+ INPUT ---        5 6 2 7 4 8 9 ;
+ INPUT ---        6 2 7 4 8 9 ;
+ INPUT ---        2 7 4 8 9 ;
+ INPUT ---        7 4 8 9 ;
+ INPUT ---        4 8 9 ;
+ INPUT ---        8 9 ;
+ INPUT ---        9 ;
+ INPUT ---    group=1 p    rows=11 cols=11 Triang ;
+ INPUT ---        10 11 12 13 14 15 16 17 18 19 20 ;
+ INPUT ---        11 12 13 14 15 16 17 18 19 20 ;
+ INPUT ---        12 13 14 15 16 17 18 19 20 ;
+ INPUT ---        13 14 15 16 17 18 19 20 ;
+ INPUT ---        14 15 16 17 18 19 20 ;
+ INPUT ---        15 16 17 18 19 20 ;
+ INPUT ---        16 17 18 19 20 ;
+ INPUT ---        17 18 19 20 ;
+ INPUT ---        18 19 20 ;
+ INPUT ---        19 20 ;
+ INPUT ---        20 ;
+ INPUT ---    design matrix constraints=20 covariates=14;
+ INPUT ---        1 -0.435341016079687 0.189521800281294 0 0 0 0 0 0 0 0 0 0 
+ INPUT ---       0;
+ INPUT ---        1 0.0621915737256695 0.00386779184247539 0 0 0 0 0 0 0 0 0 
+ INPUT ---       0 0;
+ INPUT ---        1 2.30108822784977 5.2950070323488 0 0 0 0 0 0 0 0 0 0 0;
+ INPUT ---        1 -0.684107310982365 0.468002812939522 0 0 0 0 0 0 0 0 0 0 
+ INPUT ---       0;
+ INPUT ---        1 -0.186574721177009 0.0348101265822785 0 0 0 0 0 0 0 0 0 
+ INPUT ---       0 0;
+ INPUT ---        1 0.186574721177009 0.0348101265822785 0 0 0 0 0 0 0 0 0 0 
+ INPUT ---       0;
+ INPUT ---        1 -0.808490458433704 0.65365682137834 0 0 0 0 0 0 0 0 0 0 
+ INPUT ---       0;
+ INPUT ---        1 -1.18163990078772 1.39627285513361 0 0 0 0 0 0 0 0 0 0 0;
+ INPUT ---        1 1.55478934314174 2.41736990154712 0 0 0 0 0 0 0 0 0 0 0;
+ INPUT ---        0 0 0 1 0 0 0 0 0 0 0 0 0 0;
+ INPUT ---        0 0 0 1 1 0 0 0 0 0 0 0 0 0;
+
+Program  MARK  - Survival Rate Estimation with Capture-Recapture Data
+ gfortran(dble/PIM2) Vers. 11.1 Nov 2024   7-Mar-2026 16:49:27    Page  003
+ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ 
+ INPUT ---        0 0 0 1 0 1 0 0 0 0 0 0 0 0;
+ INPUT ---        0 0 0 1 0 0 1 0 0 0 0 0 0 0;
+ INPUT ---        0 0 0 1 0 0 0 1 0 0 0 0 0 0;
+ INPUT ---        0 0 0 1 0 0 0 0 1 0 0 0 0 0;
+ INPUT ---        0 0 0 1 0 0 0 0 0 1 0 0 0 0;
+ INPUT ---        0 0 0 1 0 0 0 0 0 0 1 0 0 0;
+ INPUT ---        0 0 0 1 0 0 0 0 0 0 0 1 0 0;
+ INPUT ---        0 0 0 1 0 0 0 0 0 0 0 0 1 0;
+ INPUT ---        0 0 0 1 0 0 0 0 0 0 0 0 0 1;
+ INPUT ---       blabel(1)=Phi:(Intercept);
+ INPUT ---       blabel(2)=Phi:ENSO_jul_aug_sep;
+ INPUT ---       blabel(3)=Phi:ENSO_jul_aug_sep2;
+ INPUT ---       blabel(4)=p:(Intercept);
+ INPUT ---       blabel(5)=p:factor(time)2015;
+ INPUT ---       blabel(6)=p:factor(time)2016;
+ INPUT ---       blabel(7)=p:factor(time)2017;
+ INPUT ---       blabel(8)=p:factor(time)2018;
+ INPUT ---       blabel(9)=p:factor(time)2019;
+ INPUT ---       blabel(10)=p:factor(time)2020;
+ INPUT ---       blabel(11)=p:factor(time)2021;
+ INPUT ---       blabel(12)=p:factor(time)2022;
+ INPUT ---       blabel(13)=p:factor(time)2023;
+ INPUT ---       blabel(14)=p:factor(time)2024;
+ INPUT ---       rlabel(1)=Phi g1 c2013 a0 t2013;
+ INPUT ---       rlabel(2)=Phi g1 c2013 a1 t2014;
+ INPUT ---       rlabel(3)=Phi g1 c2013 a2 t2015;
+ INPUT ---       rlabel(4)=Phi g1 c2013 a3 t2016;
+ INPUT ---       rlabel(5)=Phi g1 c2013 a4 t2017;
+ INPUT ---       rlabel(6)=Phi g1 c2013 a5 t2018;
+ INPUT ---       rlabel(7)=Phi g1 c2013 a7 t2020;
+ INPUT ---       rlabel(8)=Phi g1 c2013 a9 t2022;
+ INPUT ---       rlabel(9)=Phi g1 c2013 a10 t2023;
+ INPUT ---       rlabel(10)=p g1 c2013 a1 t2014;
+ INPUT ---       rlabel(11)=p g1 c2013 a2 t2015;
+ INPUT ---       rlabel(12)=p g1 c2013 a3 t2016;
+ INPUT ---       rlabel(13)=p g1 c2013 a4 t2017;
+ INPUT ---       rlabel(14)=p g1 c2013 a5 t2018;
+ INPUT ---       rlabel(15)=p g1 c2013 a6 t2019;
+ INPUT ---       rlabel(16)=p g1 c2013 a7 t2020;
+ INPUT ---       rlabel(17)=p g1 c2013 a8 t2021;
+ INPUT ---       rlabel(18)=p g1 c2013 a9 t2022;
+ INPUT ---       rlabel(19)=p g1 c2013 a10 t2023;
+ INPUT ---       rlabel(20)=p g1 c2013 a11 t2024;
+   Model is { model_ENSO_jul_aug_sep }
+
+ Link Function Used is LOGIT        
+
+Program  MARK  - Survival Rate Estimation with Capture-Recapture Data
+ gfortran(dble/PIM2) Vers. 11.1 Nov 2024   7-Mar-2026 16:49:27    Page  004
+ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ 
+
+ Variance Estimation Procedure Used is 2ndPart 
+ -2logL(saturated) = 198.85252     
+ Effective Sample Size = 223
+
+ Number of function evaluations was 64 for 14 parameters.
+ For numerical optimization, CPU Time was 0.375 secs and System Time was 0.250 secs.
+ -2logL { model_ENSO_jul_aug_sep } = 235.92653     
+ Penalty { model_ENSO_jul_aug_sep } = 0.0000000     
+ Gradient { model_ENSO_jul_aug_sep }:
+ -6.04242E-07 -2.14227E-07 -6.08131E-07 -3.92252E-06 -5.80765E-06
+   0.0000      2.63091E-06  7.72002E-07   0.0000      6.94327E-07
+ -4.10229E-07   0.0000     -1.04985E-06   0.0000    
+ Maximum ABS(G) { model_ENSO_jul_aug_sep } =  5.80765E-06
+ To compute VC matrix, CPU Time was 0.156 secs and System Time was 0.062 secs.
+ S Vector { model_ENSO_jul_aug_sep }:
+   37.67387      14.83437      4.410899      3.282934      2.403623    
+   1.734990      1.102840     0.2920123     0.2083973E-04 0.1696759E-04
+  0.8032354E-07 0.1365709E-07 0.1117312E-07 0.9805306E-09
+ To invert VC matrix, CPU Time was 0.001 secs and System Time was 0.001 secs.
+ Ratio Threshold = 50.00 Max Gap (8/9) = 1.4012E+4 Next Max Gap (10/11) = 211.2
+ Gap Method for Num. of Estimated Parameters { model_ENSO_jul_aug_sep } = 8          
+ Threshold { model_ENSO_jul_aug_sep } = 0.1161531E-04           
+ Numerical Threshold Method for Num. of Estimated Parameters { model_ENSO_jul_aug_sep } = 10          
+ Number of Estimated Parameters { model_ENSO_jul_aug_sep } = 10          
+
+   * *  WARNING  * *   Number of parameters estimated from gap method (=8) and threshold method (=10) differ.  Inspect full output. 
+ Ratios of S Vector { model_ENSO_jul_aug_sep }:
+   1/2    2.539634       2/3    3.363118       3/4    1.343584       4/5    1.365827       5/6    1.385382    
+   6/7    1.573201       7/8    3.776691       8/9    14012.29       9/10    1.228208       10/11    211.2406    
+   11/12    5.881454       12/13    1.222316       13/14    11.39498    
+ DEVIANCE { model_ENSO_jul_aug_sep } = 37.074007               
+ DEVIANCE Degrees of Freedom { model_ENSO_jul_aug_sep } = 5          
+ c-hat { model_ENSO_jul_aug_sep } = 7.4148013               
+ AIC { model_ENSO_jul_aug_sep } = 255.92653               
+ AICc { model_ENSO_jul_aug_sep } = 256.96426               
+ BIC { model_ENSO_jul_aug_sep } = 289.99824               
+ Pearson Chisquare { model_ENSO_jul_aug_sep } = 48.378185               
+ Possible Encounter Histories { model_ENSO_jul_aug_sep } = 4054          
+ Pearson Chisquare df { model_ENSO_jul_aug_sep } = 4035          
+ Pearson chat { model_ENSO_jul_aug_sep } = 0.0119896               
+ Sum(Observed/Expected) { model_ENSO_jul_aug_sep } = 65.946627               
+ s-bar { model_ENSO_jul_aug_sep } = -0.9859217              
+ Fletcher chat { model_ENSO_jul_aug_sep } = 0.8516410               
+
+Program  MARK  - Survival Rate Estimation with Capture-Recapture Data
+ gfortran(dble/PIM2) Vers. 11.1 Nov 2024   7-Mar-2026 16:49:27    Page  005
+ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ 
+               LOGIT Link Function Parameters of { model_ENSO_jul_aug_sep }
+                                                              95% Confidence Interval
+    Parameter                  Beta         Standard Error     Lower           Upper
+ -------------------------  --------------  --------------  --------------  --------------
+    1:Phi:(Intercept)        5.3131995       0.0000000       5.3131995       5.3131995    
+    2:Phi:ENSO_jul_aug_sep  -38.257618       0.0000000      -38.257618      -38.257618    
+    3:Phi:ENSO_jul_aug_sep   15.804159       0.0000000       15.804159       15.804159    
+    4:p:(Intercept)         -37.900494       91.756505      -217.74325       141.94226    
+    5:p:factor(time)2015     37.425124       91.756779      -142.41817       217.26842    
+    6:p:factor(time)2016     4.9635807       9460.4693      -18537.557       18547.484    
+    7:p:factor(time)2017     34.523901       91.761202      -145.32806       214.37586    
+    8:p:factor(time)2018     33.589137       91.763492      -146.26731       213.44558    
+    9:p:factor(time)2019     1.2241958       3528.4063      -6914.4523       6916.9007    
+   10:p:factor(time)2020     37.458658       91.758873      -142.38874       217.30605    
+   11:p:factor(time)2021     36.195744       91.758491      -143.65090       216.04239    
+   12:p:factor(time)2022    -19.130930       31935.184      -62612.092       62573.830    
+   13:p:factor(time)2023     35.335543       91.758703      -144.51152       215.18260    
+   14:p:factor(time)2024     4.3940548       8556.9882      -16767.303       16776.091    
+
+
+                  Real Function Parameters of { model_ENSO_jul_aug_sep }
+                                                               95% Confidence Interval
+     Parameter                Estimate       Standard Error     Lower           Upper
+ --------------------------  --------------  --------------  --------------  --------------
+     1:Phi g1 c2013 a0 t201   1.0000000       0.0000000       1.0000000       1.0000000       
+     2:Phi g1 c2013 a1 t201   0.9523489       0.0000000       0.9523489       0.9523489       
+     3:Phi g1 c2013 a2 t201   0.7235574       0.3167393       0.1051257       0.9831412       
+     4:Phi g1 c2013 a3 t201   1.0000000       0.0000000       1.0000000       1.0000000       
+     5:Phi g1 c2013 a4 t201   0.9999977       0.0000000       0.9999977       0.9999977       
+     6:Phi g1 c2013 a5 t201   0.2184776       0.0648324       0.1172455       0.3704369       
+     7:Phi g1 c2013 a7 t202   1.0000000       0.0000000       1.0000000       1.0000000       
+     8:Phi g1 c2013 a9 t202   1.0000000       0.0000000       1.0000000       1.0000000       
+     9:Phi g1 c2013 a10 t20   0.1165623E-06   0.0000000       0.1165623E-06   0.1165623E-06   
+    10:p g1 c2013 a1 t2014    0.3467564E-16   0.3181716E-14  -0.6201487E-14   0.6270839E-14   
+    11:p g1 c2013 a2 t2015    0.3833461       0.0000000       0.3833461       0.3833461       
+    12:p g1 c2013 a3 t2016    0.4962268E-14   0.4694759E-10  -0.9201232E-10   0.9202225E-10   
+    13:p g1 c2013 a4 t2017    0.0330350       0.0270957       0.0064377       0.1526381       
+    14:p g1 c2013 a5 t2018    0.0132377       0.0139363       0.0016547       0.0979469       
+    15:p g1 c2013 a6 t2019    0.1179467E-15   0.4163047E-12  -0.8158394E-12   0.8160753E-12   
+    16:p g1 c2013 a7 t2020    0.3913035       0.1932573       0.1158705       0.7592291       
+    17:p g1 c2013 a8 t2021    0.1538458       0.0909501       0.0441871       0.4169344       
+    18:p g1 c2013 a9 t2022    0.1704383E-24   0.5443000E-20  -0.1066811E-19   0.1066845E-19   
+    19:p g1 c2013 a10 t2023   0.0714285       0.0429991       0.0211320       0.2151271       
+    20:p g1 c2013 a11 t2024   0.2807620E-14   0.2402615E-10  -0.4708844E-10   0.4709406E-10   
+
+Program  MARK  - Survival Rate Estimation with Capture-Recapture Data
+ gfortran(dble/PIM2) Vers. 11.1 Nov 2024   7-Mar-2026 16:49:27    Page  006
+ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ 
+
+ To compute parameter estimates, CPU Time was 0.001 secs and System Time was 0.001 secs.
+
+ Attempted ordering of parameters by estimatibility:
+   4  1  5 11 13  7 10  3  8  2  9 14  6 12
+ Beta number 12 is a singular value.
+
+ For procedure estimate CPU Time was 0.531 secs and System Time was 0.312 secs.
+ INPUT --- proc stop;
+
+ For this job, CPU Time in mins was 0.009 and System Time in mins was 0.006.
+
+     Time Start = 16:49:27.140   Time End = 16:49:27.487
+
+ Wall Clock Time in mins for this job was 0.005.
+
+ Maximum of 19 words used.
+
+
+          E X E C U T I O N   S U C C E S S F U L

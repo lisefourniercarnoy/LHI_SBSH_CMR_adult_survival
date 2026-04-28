@@ -1,0 +1,256 @@
+
+ Program  MARK  - Survival Rate Estimation with Capture-Recapture Data
+ gfortran(dble/PIM2) Vers. 11.1 Nov 2024  24-Jan-2026 01:51:51    Page  001
+  
+ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ 
+ Welcome to MARK localuser on machine DEP79421 in subdirectory 
+ "C:\Users\localuser\Desktop\GitHub\LHI_SBSH_CMR_adult_survival" running file "data/rmark_outputs/best_models/PDO_jul_aug_sep.inp".
+ This version was compiled by GCC version 14.2.0 using the options: 
+  -cpp -iprefix C:/tdm-gcc-64/mingw64-14-2/bin/../lib/gcc/
+  x86_64-w64-mingw32/14.2.0/ -D_MT -D_REENTRANT -U_REENTRANT -D
+  dbleprecision -m64 -march=x86-64 -mtune=generic -mthreads -O3 -std=f2023
+  -fimplicit-none -ffpe-summary=invalid,zero,overflow,underflow
+  -funroll-loops -fno-unsafe-math-optimizations -frounding-math
+  -fsignaling-nans -fall-intrinsics -fopenmp
+
+ This problem will use 19 of 20 possible threads.
+ Static thread allocation is used.
+ INPUT --- proc title ;
+
+ For procedure title CPU Time was 0.001 secs and System Time was 0.001 secs.
+ INPUT --- proc chmatrix occasions= 12 groups= 1 etype= Live Nodes= 
+ INPUT --- 101 ICMeans NoHist hist= 25  ;
+ INPUT ---    time interval 1 1 1 1 1 1 1 1 1 1 1 ;
+ INPUT ---    glabel(1)=Group 1;
+
+      Number of unique encounter histories read was 25.
+
+      Number of individual covariates read was 0.
+      Time interval lengths are all equal to 1.
+
+      Data type number is 1
+      Data type is Live Recaptures (CJS)
+
+ For procedure chmatrix CPU Time was 0.001 secs and System Time was 0.001 secs.
+
+Program  MARK  - Survival Rate Estimation with Capture-Recapture Data
+ gfortran(dble/PIM2) Vers. 11.1 Nov 2024  24-Jan-2026 01:51:51    Page  002
+ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ 
+
+
+ INPUT --- proc estimate link=Logit NOLOOP varest=2ndPart    ;
+ INPUT --- model={ model_PDO_jul_aug_sep };
+ INPUT ---    group=1 Phi    rows=11 cols=11 Triang ;
+ INPUT ---        1 2 3 4 5 6 7 8 9 10 11 ;
+ INPUT ---        2 3 4 5 6 7 8 9 10 11 ;
+ INPUT ---        3 4 5 6 7 8 9 10 11 ;
+ INPUT ---        4 5 6 7 8 9 10 11 ;
+ INPUT ---        5 6 7 8 9 10 11 ;
+ INPUT ---        6 7 8 9 10 11 ;
+ INPUT ---        7 8 9 10 11 ;
+ INPUT ---        8 9 10 11 ;
+ INPUT ---        9 10 11 ;
+ INPUT ---        10 11 ;
+ INPUT ---        11 ;
+ INPUT ---    group=1 p    rows=11 cols=11 Triang ;
+ INPUT ---        12 13 14 15 16 17 18 19 20 21 22 ;
+ INPUT ---        13 14 15 16 17 18 19 20 21 22 ;
+ INPUT ---        14 15 16 17 18 19 20 21 22 ;
+ INPUT ---        15 16 17 18 19 20 21 22 ;
+ INPUT ---        16 17 18 19 20 21 22 ;
+ INPUT ---        17 18 19 20 21 22 ;
+ INPUT ---        18 19 20 21 22 ;
+ INPUT ---        19 20 21 22 ;
+ INPUT ---        20 21 22 ;
+ INPUT ---        21 22 ;
+ INPUT ---        22 ;
+ INPUT ---    design matrix constraints=22 covariates=13;
+ INPUT ---        1 -0.26187223132003 0 0 0 0 0 0 0 0 0 0 0;
+ INPUT ---        1 1.05270550359327 0 0 0 0 0 0 0 0 0 0 0;
+ INPUT ---        1 1.55600097924579 0 0 0 0 0 0 0 0 0 0 0;
+ INPUT ---        1 0.499330876134528 0 0 0 0 0 0 0 0 0 0 0;
+ INPUT ---        1 0.394164657341464 0 0 0 0 0 0 0 0 0 0 0;
+ INPUT ---        1 0.564433773482615 0 0 0 0 0 0 0 0 0 0 0;
+ INPUT ---        1 0.874924514681184 0 0 0 0 0 0 0 0 0 0 0;
+ INPUT ---        1 -0.109130818311056 0 0 0 0 0 0 0 0 0 0 0;
+ INPUT ---        1 -0.514771947941446 0 0 0 0 0 0 0 0 0 0 0;
+ INPUT ---        1 -1.1157217696161 0 0 0 0 0 0 0 0 0 0 0;
+ INPUT ---        1 -1.28348692816694 0 0 0 0 0 0 0 0 0 0 0;
+ INPUT ---        0 0 1 0 0 0 0 0 0 0 0 0 0;
+ INPUT ---        0 0 1 1 0 0 0 0 0 0 0 0 0;
+ INPUT ---        0 0 1 0 1 0 0 0 0 0 0 0 0;
+ INPUT ---        0 0 1 0 0 1 0 0 0 0 0 0 0;
+ INPUT ---        0 0 1 0 0 0 1 0 0 0 0 0 0;
+ INPUT ---        0 0 1 0 0 0 0 1 0 0 0 0 0;
+
+Program  MARK  - Survival Rate Estimation with Capture-Recapture Data
+ gfortran(dble/PIM2) Vers. 11.1 Nov 2024  24-Jan-2026 01:51:51    Page  003
+ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ 
+ INPUT ---        0 0 1 0 0 0 0 0 1 0 0 0 0;
+ INPUT ---        0 0 1 0 0 0 0 0 0 1 0 0 0;
+ INPUT ---        0 0 1 0 0 0 0 0 0 0 1 0 0;
+ INPUT ---        0 0 1 0 0 0 0 0 0 0 0 1 0;
+ INPUT ---        0 0 1 0 0 0 0 0 0 0 0 0 1;
+ INPUT ---       blabel(1)=Phi:(Intercept);
+ INPUT ---       blabel(2)=Phi:PDO_jul_aug_sep;
+ INPUT ---       blabel(3)=p:(Intercept);
+ INPUT ---       blabel(4)=p:factor(time)2015;
+ INPUT ---       blabel(5)=p:factor(time)2016;
+ INPUT ---       blabel(6)=p:factor(time)2017;
+ INPUT ---       blabel(7)=p:factor(time)2018;
+ INPUT ---       blabel(8)=p:factor(time)2019;
+ INPUT ---       blabel(9)=p:factor(time)2020;
+ INPUT ---       blabel(10)=p:factor(time)2021;
+ INPUT ---       blabel(11)=p:factor(time)2022;
+ INPUT ---       blabel(12)=p:factor(time)2023;
+ INPUT ---       blabel(13)=p:factor(time)2024;
+ INPUT ---       rlabel(1)=Phi g1 c2013 a0 t2013;
+ INPUT ---       rlabel(2)=Phi g1 c2013 a1 t2014;
+ INPUT ---       rlabel(3)=Phi g1 c2013 a2 t2015;
+ INPUT ---       rlabel(4)=Phi g1 c2013 a3 t2016;
+ INPUT ---       rlabel(5)=Phi g1 c2013 a4 t2017;
+ INPUT ---       rlabel(6)=Phi g1 c2013 a5 t2018;
+ INPUT ---       rlabel(7)=Phi g1 c2013 a6 t2019;
+ INPUT ---       rlabel(8)=Phi g1 c2013 a7 t2020;
+ INPUT ---       rlabel(9)=Phi g1 c2013 a8 t2021;
+ INPUT ---       rlabel(10)=Phi g1 c2013 a9 t2022;
+ INPUT ---       rlabel(11)=Phi g1 c2013 a10 t2023;
+ INPUT ---       rlabel(12)=p g1 c2013 a1 t2014;
+ INPUT ---       rlabel(13)=p g1 c2013 a2 t2015;
+ INPUT ---       rlabel(14)=p g1 c2013 a3 t2016;
+ INPUT ---       rlabel(15)=p g1 c2013 a4 t2017;
+ INPUT ---       rlabel(16)=p g1 c2013 a5 t2018;
+ INPUT ---       rlabel(17)=p g1 c2013 a6 t2019;
+ INPUT ---       rlabel(18)=p g1 c2013 a7 t2020;
+ INPUT ---       rlabel(19)=p g1 c2013 a8 t2021;
+ INPUT ---       rlabel(20)=p g1 c2013 a9 t2022;
+ INPUT ---       rlabel(21)=p g1 c2013 a10 t2023;
+ INPUT ---       rlabel(22)=p g1 c2013 a11 t2024;
+   Model is { model_PDO_jul_aug_sep }
+
+ Link Function Used is LOGIT        
+
+ Variance Estimation Procedure Used is 2ndPart 
+ -2logL(saturated) = 198.85252     
+ Effective Sample Size = 223
+
+ Number of function evaluations was 45 for 13 parameters.
+ For numerical optimization, CPU Time was 0.312 secs and System Time was 0.156 secs.
+
+Program  MARK  - Survival Rate Estimation with Capture-Recapture Data
+ gfortran(dble/PIM2) Vers. 11.1 Nov 2024  24-Jan-2026 01:51:52    Page  004
+ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ 
+ -2logL { model_PDO_jul_aug_sep } = 238.26375     
+ Penalty { model_PDO_jul_aug_sep } = 0.0000000     
+ Gradient { model_PDO_jul_aug_sep }:
+  5.33968E-04  2.77690E-04  4.70986E-04  1.16557E-04   0.0000    
+  4.81891E-05  3.79332E-05   0.0000      1.33602E-04 -3.13156E-05
+   0.0000      1.66185E-04   0.0000    
+ Maximum ABS(G) { model_PDO_jul_aug_sep } =  5.33968E-04
+ To compute VC matrix, CPU Time was 0.125 secs and System Time was 0.063 secs.
+ S Vector { model_PDO_jul_aug_sep }:
+   43.74508      9.385177      5.394613      3.272457      2.924716    
+   2.050066      1.092253     0.2731678     0.5864004E-05 0.2530573E-06
+  0.1795333E-06 0.5860499E-07 0.1510479E-07
+ To invert VC matrix, CPU Time was 0.001 secs and System Time was 0.001 secs.
+ Ratio Threshold = 50.00 Max Gap (8/9) = 4.6584E+4 Next Max Gap (9/10) = 23.17
+ Gap Method for Num. of Estimated Parameters { model_PDO_jul_aug_sep } = 8          
+ Threshold { model_PDO_jul_aug_sep } = 0.0010679               
+ Numerical Threshold Method for Num. of Estimated Parameters { model_PDO_jul_aug_sep } = 8          
+ Number of Estimated Parameters { model_PDO_jul_aug_sep } = 8          
+ DEVIANCE { model_PDO_jul_aug_sep } = 39.411230               
+ DEVIANCE Degrees of Freedom { model_PDO_jul_aug_sep } = 7          
+ c-hat { model_PDO_jul_aug_sep } = 5.6301757               
+ AIC { model_PDO_jul_aug_sep } = 254.26375               
+ AICc { model_PDO_jul_aug_sep } = 254.93665               
+ BIC { model_PDO_jul_aug_sep } = 281.52112               
+ Pearson Chisquare { model_PDO_jul_aug_sep } = 75.865663               
+ Possible Encounter Histories { model_PDO_jul_aug_sep } = 4054          
+ Pearson Chisquare df { model_PDO_jul_aug_sep } = 4037          
+ Pearson chat { model_PDO_jul_aug_sep } = 0.0187926               
+ Sum(Observed/Expected) { model_PDO_jul_aug_sep } = 92.211878               
+ s-bar { model_PDO_jul_aug_sep } = -0.9794285              
+ Fletcher chat { model_PDO_jul_aug_sep } = 0.9135235               
+
+
+               LOGIT Link Function Parameters of { model_PDO_jul_aug_sep }
+                                                              95% Confidence Interval
+    Parameter                  Beta         Standard Error     Lower           Upper
+ -------------------------  --------------  --------------  --------------  --------------
+    1:Phi:(Intercept)        1.3611110       0.7432660      -0.0956903       2.8179124    
+    2:Phi:PDO_jul_aug_sep    0.0856820       1.0692982      -2.0101425       2.1815064    
+    3:p:(Intercept)         -20.742780       156.12897      -326.75558       285.27001    
+    4:p:factor(time)2015     20.764201       156.12908      -285.24880       326.77720    
+    5:p:factor(time)2016    -2.5274442       2414.3021      -4734.5596       4729.5047    
+    6:p:factor(time)2017     17.681993       156.13088      -288.33453       323.69852    
+    7:p:factor(time)2018     16.900334       156.13250      -289.11937       322.92004    
+
+Program  MARK  - Survival Rate Estimation with Capture-Recapture Data
+ gfortran(dble/PIM2) Vers. 11.1 Nov 2024  24-Jan-2026 01:51:52    Page  005
+ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ 
+    8:p:factor(time)2019    -5.2520791       8056.1031      -15795.214       15784.710    
+    9:p:factor(time)2020     19.158240       156.12963      -286.85584       325.17232    
+   10:p:factor(time)2021     18.429431       156.13028      -287.58593       324.44479    
+   11:p:factor(time)2022     0.7148462       2276.3352      -4460.9023       4462.3320    
+   12:p:factor(time)2023     18.235870       156.13213      -287.78310       324.25484    
+   13:p:factor(time)2024    -2.6381855       4108.2585      -8054.8251       8049.5487    
+
+
+                  Real Function Parameters of { model_PDO_jul_aug_sep }
+                                                               95% Confidence Interval
+     Parameter                Estimate       Standard Error     Lower           Upper
+ --------------------------  --------------  --------------  --------------  --------------
+     1:Phi g1 c2013 a0 t201   0.7922717       0.1614856       0.3578963       0.9630967       
+     2:Phi g1 c2013 a1 t201   0.8101998       0.1071179       0.5214880       0.9435670       
+     3:Phi g1 c2013 a2 t201   0.8167426       0.1738103       0.3139678       0.9774783       
+     4:Phi g1 c2013 a3 t201   0.8028012       0.0716123       0.6265131       0.9080874       
+     5:Phi g1 c2013 a4 t201   0.8013708       0.0764177       0.6115706       0.9118028       
+     6:Phi g1 c2013 a5 t201   0.8036828       0.0707867       0.6295103       0.9079476       
+     7:Phi g1 c2013 a6 t201   0.8078463       0.0876373       0.5816462       0.9270760       
+     8:Phi g1 c2013 a7 t202   0.7944173       0.1370695       0.4272150       0.9524268       
+     9:Phi g1 c2013 a8 t202   0.7886829       0.2046564       0.2516523       0.9764277       
+    10:Phi g1 c2013 a9 t202   0.7799738       0.3159751       0.0876064       0.9924171       
+    11:Phi g1 c2013 a10 t20   0.7774970       0.3486982       0.0630008       0.9945236       
+    12:p g1 c2013 a1 t2014    0.9806747E-09   0.1531117E-06  -0.2991183E-06   0.3010797E-06   
+    13:p g1 c2013 a2 t2015    0.5053549       0.0994434       0.3190143       0.6902195       
+    14:p g1 c2013 a3 t2016    0.7831950E-10   0.1894798E-06  -0.3713021E-06   0.3714587E-06   
+    15:p g1 c2013 a4 t2017    0.0447540       0.0334857       0.0099913       0.1786420       
+    16:p g1 c2013 a5 t2018    0.0209910       0.0215869       0.0027284       0.1438603       
+    17:p g1 c2013 a6 t2019    0.5135420E-11   0.4138253E-07  -0.8110462E-07   0.8111489E-07   
+    18:p g1 c2013 a7 t2020    0.1701534       0.0799353       0.0633215       0.3834415       
+    19:p g1 c2013 a8 t2021    0.0900234       0.0568202       0.0247751       0.2781075       
+    20:p g1 c2013 a9 t2022    0.2004374E-08   0.4566160E-05  -0.8947670E-05   0.8951679E-05   
+    21:p g1 c2013 a10 t2023   0.0753751       0.0694098       0.0114423       0.3647294       
+    22:p g1 c2013 a11 t2024   0.7010929E-10   0.2880946E-06  -0.5645952E-06   0.5647354E-06   
+
+ To compute parameter estimates, CPU Time was 0.001 secs and System Time was 0.015 secs.
+
+ Attempted ordering of parameters by estimatibility:
+   3  4  9  1 10 12  6  2  7 11  5 13  8
+ Beta number 8 is a singular value.
+
+ For procedure estimate CPU Time was 0.438 secs and System Time was 0.250 secs.
+
+Program  MARK  - Survival Rate Estimation with Capture-Recapture Data
+ gfortran(dble/PIM2) Vers. 11.1 Nov 2024  24-Jan-2026 01:51:52    Page  006
+ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ 
+
+
+ INPUT --- proc stop;
+
+ For this job, CPU Time in mins was 0.008 and System Time in mins was 0.005.
+
+     Time Start = 01:51:51.842   Time End = 01:51:52.154
+
+ Wall Clock Time in mins for this job was 0.004.
+
+ Maximum of 19 words used.
+
+
+          E X E C U T I O N   S U C C E S S F U L
