@@ -4,7 +4,7 @@
 # project: Sable Shearwater, adult CMR survival
 # data: LHI SBSH 2010-2025 CMR data
 
-# script objective: clean up raw data for analysis
+# script objective: clean up raw data for analysis.
 
 ###############################################################################
 
@@ -13,6 +13,7 @@ rm(list = ls())
 library(tidyverse) # for data manipulation
 library(stringr) # for fixing capture histories
 library(RMark) # for running rmark
+library(zoo)
 
 ## Read in raw CMR data -------------------------------------------------------
 
@@ -22,16 +23,28 @@ dat <- read.csv("data/raw/LHI_FFSH_clean_live_recap.csv", skip = 1) %>%
   mutate(`2019` = ifelse(is.na(`2019`), 0, `2019`)) %>% # no recaptures for 2019 breeding season, fill with 0
   glimpse()
 
-# remove 2009-banded birds because there is no env data
-dat <- dplyr::select(dat, -`2009`)
+dat %>%
+  select(`2009`:`2024`) %>%
+  # for each bird, find the first year they were marked (first column with a 1)
+  mutate(first_year = names(.)[max.col(. != 0, ties.method = "first")]) %>%
+  count(first_year) %>%
+  mutate(first_year = as.integer(first_year)) %>%
+  ggplot(aes(x = first_year, y = n)) +
+  geom_col() +
+  geom_text(aes(label = n), vjust = -0.5, size = 3.5) +
+  scale_x_continuous(breaks = 2009:2024) +
+  labs(
+    y = "Number of birds marked"
+  ) +
+  theme_classic()
+
+# remove birds from early years. (there are few birds in these years, so estimating survival in these years is difficult numerically and not very informative)
+dat <- dplyr::select(dat, -c(`2009`:`2012`))
 
 # add a 'capture history' (ch) column
 dat <- dat %>%
-  mutate(ch = apply(select(., `2010`:`2024`), 1, paste0, collapse = "")) %>%
+  mutate(ch = apply(select(., first(starts_with("20")):`2024`), 1, paste0, collapse = "")) %>%
   glimpse()
-
-# remove transients (birds banded as chicks that were only seen once- adults who are only seen once are not considered as transients)
-dat <- dat[dat$Age != "P" | str_count(dat$ch, "1") > 1, ]
 
 
 # format chick data so that you're culling chick years
@@ -45,125 +58,55 @@ dat <- dat %>%
 max_length <- max(nchar(dat$ch))  # Find the longest string length
 
 dat <- dat %>%
-  mutate(ch = str_pad(ch, width = max_length, side = "left", pad = "0")) %>%
-  glimpse()
-
-# select relevant columns
-dat <- dat %>%
-  dplyr::select(Band, ch, Age) %>% 
+  mutate(ch = str_pad(ch, width = max_length, side = "left", pad = "0")) %>% # pad the character string with zeroes on the left
   glimpse()
 
 # age class '?' are '1+' birds, so technically adults
 dat$Age <- ifelse(dat$Age == "1+", "A", dat$Age)
 
-# split the capture histories again (needed for GOF tests)
-dat <- dat %>%
-  mutate(ch_split = strsplit(ch, "")) %>%
-  unnest_wider(ch_split, names_sep = "_") %>%
-  rename_with(~ as.character(2010:2024), starts_with("ch_split_")) %>% 
-  glimpse(dat)
+# remove transients (birds banded as chicks that were only seen once- adults who are only seen once are not considered as transients)
+dat <- dat[dat$Age != "P" | str_count(dat$ch, "1") > 1, ]
+dat <- dat[str_count(dat$ch, "1") != 0, ]
+
+
+glimpse(dat)
+colSums(dat[3:14]) # make sure the first few years actually have birds in them, otherwise remove those years (line 26)
 
 # save the cleaned data
 saveRDS(dat, "data/tidy/LHI_FFSH_capture_histories.rds")
 
 
-## Read in raw CMR data (known fate, archive) ---------------------------------
-
-dat <- read.csv("data/raw/LHI_FFSH_clean_live_recap.csv") %>% 
-  mutate(across(where(is.integer), ~ ifelse(is.na(.), 0, 1))) %>% # fill NAs with 0 and non-NAs with 1
-  rename_with(~ gsub("^X", "", .), starts_with("X")) %>% 
-  mutate(`2019` = ifelse(is.na(`2019`), 0, `2019`)) %>% # no recaptures for 2019 breeding season, fill with 0
-  glimpse()
-
-# remove 2009-banded birds because there is no env data
-dat <- dplyr::select(dat, -`2009`)
-
-# remove transients
-date_cols <- as.character(2010:2024)
-
-dat <- dat %>%
-  filter(rowSums(select(., all_of(date_cols))) > 1)
-# dat <- dat %>%
-#   filter(str_count(ch, "1") > 1)
-
-# add in the known-deceased birds 
-# dead_lookup <- read_csv("data/raw/LHI_FFSH_known_deceased.csv") %>%
-#   transmute(Band = band,
-#             year = as.character(breeding_season_recovered),
-#             dead = 1)
-# 
-# dead_matrix <- expand.grid(Band = dat$Band,
-#                            year = names(dat)[-(1:2)],
-#                            stringsAsFactors = FALSE) %>%
-#   left_join(dead_lookup, by = c("Band", "year")) %>%
-#   mutate(dead = replace_na(dead, 0)) %>%
-#   pivot_wider(names_from = year,
-#               values_from = dead,
-#               names_prefix = "",
-#               names_sep = "_dead") %>%
-#   rename_with(~ paste0(gsub("_dead", "", .), "_dead"), -Band)
-# dat <- bind_cols(dat, dead_matrix %>% select(-Band))
-# 
-# # reorder the dataframe columns
-# years <- grep("^\\d{4}$", names(dat), value = TRUE)
-# interleaved_cols <- unlist(lapply(years, function(y) c(y, paste0(y, "_dead"))))
-# dat_reordered <- dat %>% 
-#   select(Age, Band, all_of(interleaved_cols))
-
-# # add a 'capture history' (ch) column
-# dat <- dat_reordered %>%
-#   mutate(ch = apply(select(., `2010`:`2024_dead`), 1, paste0, collapse = "")) %>%
-#   glimpse()
-
-
-
-# format chick data so that you're culling chick years
-dat <- dat %>%
-  mutate(ch = ifelse(Age == "P", 
-                     sub("^.*?1.*?(1.*)$", "\\1", ch), 
-                     ch)) %>%
-  glimpse()
-
-# fill the culled capture histories so everything's the right format
-max_length <- max(nchar(dat$ch))  # Find the longest string length
-
-dat <- dat %>%
-  mutate(ch = str_pad(ch, width = max_length, side = "left", pad = "0")) %>%
-  glimpse()
-
-# select relevant columns
-dat <- dat %>%
-  dplyr::select(Band, ch, Age) %>% 
-  glimpse()
-
-
-# save the cleaned data
-saveRDS(dat, "data/tidy/LHI_FFSH_capture_histories_known_fate.rds")
-
-
 ## Environmental data ---------------------------------------------------------
 
+# we want to understand whether/what environmental index has an influence over survival.
+# the wintering period (May-September) is what we will test. We'll use a 3-month average of each variable (July-September)
+
+
+### El Nino Southern Oscillation (ENSO) ---------------------------------------
+
 enso <- read.csv("data/raw/ENSO values.csv", skip = 1) %>%  # skip the first row (data source info)
-  rename(ENSO_sep_oct_nov = SON, # rename for clarity
-         ENSO_may_jun_jul = MJJ
+  rename(# rename for clarity
+         ENSO_jun_jul_aug = JJA,
+         ENSO_jul_aug_sep = JAS,
+         #ENSO_aug_sep_oct = ASO
          ) %>% 
   glimpse()
 
-# 1-year lag
-enso$ENSO_prev_yr_sep_oct_nov <- dplyr::lag(enso$ENSO_sep_oct_nov, 1)
-enso$ENSO_prev_yr_may_jun_jul <- dplyr::lag(enso$ENSO_may_jun_jul, 1)
-
 # Select the desired columns
-enso <- enso[, c("time", "ENSO_may_jun_jul", "ENSO_sep_oct_nov", "ENSO_prev_yr_may_jun_jul", "ENSO_prev_yr_sep_oct_nov")]
-enso <- enso[enso$time >= 2009 & enso$time <= 2024,]
-# View result
-print(enso)
+enso <- enso[, c("time", 
+                 "ENSO_jun_jul_aug", 
+                 "ENSO_jul_aug_sep" 
+                 #"ENSO_aug_sep_oct"
+                 )]
+enso <- enso[enso$time >= 2013 & enso$time <= 2024,]
+
+print(enso) # check the format - years have to be called 'time' for rmark to recognise it.
 
 # save the tidy environmental dat
 saveRDS(enso, "data/tidy/ENSO_tidy.rds")
 
 
-# Pacific Decadal Oscillation -------------------------------------------------
+### Pacific Decadal Oscillation -----------------------------------------------
 
 pdo <- readLines("data/raw/PDO values.txt")
 pdo_data <- pdo[-c(1,2)] # Remove the first two header lines
@@ -177,22 +120,23 @@ pdo[] <- lapply(pdo, function(x) ifelse(suppressWarnings(!is.na(as.numeric(x))),
 pdo_clean <- pdo %>%
   mutate(
     time = Year,
-    PDO_sep_oct_nov = rowMeans(select(., Sep, Oct, Nov), na.rm = TRUE),
-    PDO_may_jun_jul = rowMeans(select(., May, Jun, Jul), na.rm = TRUE),
-    PDO_prev_yr_sep_oct_nov = lag(PDO_sep_oct_nov),
-    PDO_prev_yr_may_jun_jul = lag(PDO_may_jun_jul)
+    PDO_jun_jul_aug = rowMeans(select(., Jun, Jul, Aug), na.rm = TRUE),
+    PDO_jul_aug_sep = rowMeans(select(., Jul, Aug, Sep), na.rm = TRUE)
   ) %>%
-  dplyr::select(time, PDO_sep_oct_nov, PDO_may_jun_jul, PDO_prev_yr_sep_oct_nov, PDO_prev_yr_may_jun_jul) %>% 
-  dplyr::filter(time >= 2009 & time <= 2024) %>% 
+  dplyr::select(time,
+                PDO_jun_jul_aug, 
+                PDO_jul_aug_sep
+                ) %>% 
+  dplyr::filter(time >= 2013 & time <= 2024) %>% 
   glimpse()
 
-print(pdo_clean) # resulting data has breeding season PDO values, non-breeding season, as well as 1 year lag of each
+print(pdo_clean) # check the format - years have to be called 'time' for rmark to recognise it. 
 
 # save the tidy environmental dat
 saveRDS(pdo_clean, "data/tidy/PDO_tidy.rds")
 
 
-# Antarctic Oscillation -------------------------------------------------------
+### Antarctic Oscillation -----------------------------------------------------
 
 aao <- readLines("data/raw/AAO values.txt")
 aao_data <- aao[-c(1, 2)] # Remove the first two header lines
@@ -206,22 +150,47 @@ aao[] <- lapply(aao, function(x) ifelse(suppressWarnings(!is.na(as.numeric(x))),
 aao_clean <- aao %>%
   mutate(
     time = Year,
-    AAO_sep_oct_nov = rowMeans(select(., Sep, Oct, Nov), na.rm = TRUE),
-    AAO_may_jun_jul = rowMeans(select(., May, Jun, Jul), na.rm = TRUE),
-    AAO_prev_yr_sep_oct_nov = lag(AAO_sep_oct_nov),
-    AAO_prev_yr_may_jun_jul = lag(AAO_may_jun_jul)
+    AAO_jun_jul_aug = rowMeans(select(., Jun, Jul, Aug), na.rm = TRUE),
+    AAO_jul_aug_sep = rowMeans(select(., Jul, Aug, Sep), na.rm = TRUE)
   ) %>%
-  dplyr::select(time, AAO_sep_oct_nov, AAO_may_jun_jul, AAO_prev_yr_sep_oct_nov, AAO_prev_yr_may_jun_jul) %>% 
-  dplyr::filter(time >= 2009 & time <= 2024) %>% 
+  dplyr::select(time, 
+                AAO_jun_jul_aug, 
+                AAO_jul_aug_sep
+                ) %>% 
+  dplyr::filter(time >= 2013 & time <= 2024) %>% 
   glimpse()
 
 print(aao_clean) # resulting data has breeding season PDO values, non-breeding season, as well as 1 year lag of each
 
-# save the tidy environmental dat
+# save the tidy environmental data
 saveRDS(aao_clean, "data/tidy/AAO_tidy.rds")
 
 
+### Arctic Oscillation --------------------------------------------------------
+
+AO <- read.csv("data/raw/AO values.csv", skip = 1) %>%  # skip the first row (data source info)
+  glimpse()
+
+# Select the desired columns
+ao_clean <- AO %>%
+  mutate(
+    AAO_jun_jul_aug = rowMeans(select(., June, July, August), na.rm = TRUE),
+    AO_jul_aug_sep = rowMeans(select(., July, August, September), na.rm = TRUE)
+  ) %>%
+  dplyr::select(time, 
+                AAO_jun_jul_aug, 
+                AO_jul_aug_sep
+  ) %>% 
+  dplyr::filter(time >= 2013 & time <= 2024) %>% 
+  glimpse()
+
+# save the tidy environmental dat
+saveRDS(ao_clean, "data/tidy/AO_tidy.rds")
+
+
 # SST data --------------------------------------------------------------------
+
+## sst is the only environmental thing that is missing data to make an 'in-between breeding seasons' metric (july-sept.) so we are lumping june-oct for this one only.
 
 sst <- read.csv("data/raw/IMOS_-_Australian_National_Mooring_Network_(ANMN)_-_CTD_Profiles.csv", skip = 29) %>%
     mutate(datetime = ymd_hms(TIME)) %>% 
@@ -234,50 +203,46 @@ sst <- read.csv("data/raw/IMOS_-_Australian_National_Mooring_Network_(ANMN)_-_CT
   group_by(datetime) %>% 
   mutate(temp_10_15m = mean(TEMP)) %>% 
   glimpse()
+unique(sst$datetime)
+
 
 # Extract year and month
 sst_temp <- sst %>%
   mutate(
-    time = year(datetime), # has to be 'time' for RMark
+    time = year(datetime),
     month = month(datetime)
   ) %>%
-  filter(month %in% c(5, 6, 7, 9, 10, 11)) %>% # filter for only months we care about
-  mutate(
-    season = case_when(
-      month %in% c(5, 6, 7) ~ "may_jun_jul",
-      month %in% c(9, 10, 11) ~ "sep_oct_nov"
-    )
-  ) %>%
-  group_by(time, season) %>%
+  filter(month %in% 6:10) %>%
+  group_by(time) %>%
   summarise(
-    mean_temp = mean(temp_10_15m, na.rm = TRUE),
+    temp_jun_oct = mean(temp_10_15m[month %in% c(6,7,8,9,10)], na.rm = TRUE),
+    
+    #temp_jun_jul_aug = mean(temp_10_15m[month %in% c(6,7,8)], na.rm = TRUE),
+    #temp_jul_aug_sep = mean(temp_10_15m[month %in% c(7,8,9)], na.rm = TRUE),
+    #temp_aug_sep_oct = mean(temp_10_15m[month %in% c(8,9,10)], na.rm = TRUE),
     .groups = "drop"
-  ) %>% 
-  glimpse()
-
-# Pivot to wide format
-sst_wide <- sst_temp %>%
-  pivot_wider(
-    names_from = season,
-    values_from = mean_temp,
-    names_prefix = "temp_"
-  ) %>% 
-  glimpse()
-
-# Create lagged (previous year) temperature columns
-sst_final <- sst_wide %>%
-  arrange(time) %>%
-  mutate(
-    temp_prev_may_jun_jul = lag(temp_may_jun_jul),
-    temp_prev_sep_oct_nov = lag(temp_sep_oct_nov)
-  ) %>% 
-  glimpse()
+  )
 
 # Remove rows with NA if needed (i.e., first year)
 # sst_final <- sst_final %>%
 #   filter(!is.na(temp_prev_may_jun_jul) & !is.na(temp_prev_sep_oct_nov))
+sst_final <- sst_temp %>% dplyr::filter(time >= 2013)
 print(sst_final)
 
 saveRDS(sst_final, "data/tidy/temp_tidy.rds")
+
+
+# Wintering temperature -------------------------------------------------------
+
+sst_w <- read.csv("data/raw/SST japan values.csv", skip = 1) %>%
+  glimpse()
+
+sst_w <- data.frame(time = sst_w[,1], sst_w_mean = rowMeans(sst_w[,-1]))
+
+plot(sst_w$sst_w_mean ~ sst_w$time)
+
+saveRDS(sst_w, "data/tidy/temp_w_tidy.rds")
+
+
 
 ### END ###
