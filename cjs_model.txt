@@ -1,0 +1,24 @@
+model {
+  # Priors
+  beta0 ~ dnorm(0, 0.001)
+  alpha ~ dnorm(0, 0.001)
+  
+  # Priors for beta vector of length K
+  for (k in 1:K) {
+    beta[k] ~ dnorm(0, 0.001)
+  }
+
+  for (i in 1:N) {
+    z[i, first[i]] <- 1  # Alive at first capture
+
+    for (t in (first[i] + 1):T) {
+      logit(phi[i, t - 1]) <- beta0 + inprod(beta[1:K], X[t - 1, 1:K])
+      z[i, t] ~ dbern(z[i, t - 1] * phi[i, t - 1])
+    }
+
+    for (t in first[i]:T) {
+      logit(p[i, t]) <- alpha
+      y[i, t] ~ dbern(z[i, t] * p[i, t])
+    }
+  }
+}

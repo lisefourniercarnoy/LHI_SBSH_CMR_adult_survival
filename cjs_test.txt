@@ -1,0 +1,22 @@
+model {
+  # Priors
+  beta0 ~ dnorm(0, 0.001)
+  beta1 ~ dnorm(0, 0.001)
+  alpha ~ dnorm(0, 0.001)
+
+  for (i in 1:N) {
+    z[i, first[i]] <- 1  # Alive at first capture
+
+    for (t in (first[i] + 1):T) {
+      logit(phi[i, t - 1]) <- beta0 + beta1 * enso[t - 1]
+      z[i, t] ~ dbern(z[i, t - 1] * phi[i, t - 1])
+    }
+
+    for (t in first[i]:T) {
+      logit(p[i, t]) <- alpha
+      
+      # Only model y[i,t] if it's not missing (i.e. known: y in {0,1})
+      y[i, t] ~ dbern(z[i, t] * p[i, t])
+    }
+  }
+}
