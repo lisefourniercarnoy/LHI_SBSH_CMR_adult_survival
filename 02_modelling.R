@@ -1,6 +1,6 @@
 ###############################################################################
 
-# authors: Jenn Lavers, Lise Fournier-Carnoy, Alex Bond
+# authors: Lise Fournier-Carnoy, Alex L. Bond, Jennifer  L. Lavers 
 # project: Sable Shearwater, adult CMR survival
 # data: LHI SBSH 2011-2024 CMR data
 
@@ -10,12 +10,13 @@
 
 rm(list = ls())
 
-library(tidyverse)
+library(tidyverse) # for data manipulation
 library(stringr)
-library(RMark)
-library(R2ucare)
-library(corrplot)
-library(jagsUI)
+library(RMark) # for mark-recapture analysis
+library(R2ucare) # for mark-recapture analysis
+library(corrplot) # to check correlations
+library(jagsUI) # for the bayesian MCMC
+library(kableExtra) # to make tables
 
 
 ## Read in data ---------------------------------------------------------------
@@ -25,27 +26,25 @@ sbsh  <- readRDS("data/tidy/LHI_FFSH_capture_histories.rds") %>%
   glimpse()
 
 enso    <- readRDS("data/tidy/ENSO_tidy.rds") %>% glimpse()
-pdo     <- readRDS("data/tidy/PDO_tidy.rds") %>% glimpse()
-aao     <- readRDS("data/tidy/AAO_tidy.rds") %>% glimpse()
+#pdo     <- readRDS("data/tidy/PDO_tidy.rds") %>% glimpse()
+#aao     <- readRDS("data/tidy/AAO_tidy.rds") %>% glimpse() # irrelevant because birds are up in Japan
 ao      <- readRDS("data/tidy/AO_tidy.rds") %>% glimpse()
-temp    <- readRDS("data/tidy/temp_tidy.rds") %>% glimpse()
+#temp    <- readRDS("data/tidy/temp_tidy.rds") %>% glimpse() #this is temperature near Sydney which is irrelevant because birds arent there Jul-Sep
 temp_w  <- readRDS("data/tidy/temp_w_tidy.rds") %>% dplyr::filter(time>=2013) %>% glimpse()
 
 clim_list = list(enso, 
-                 #pdo, 
-                 #aao, 
                  ao, 
                  #temp, #this is temperature near Sydney which is irrelevant because birds arent there Jul-Sep
                  temp_w)
 clim <- clim_list %>% 
   reduce(~ inner_join(.x, .y, by = "time"))
 
-clim <- clim %>% dplyr::filter(time >= 2013)
+clim <- clim %>% dplyr::filter(time >= 2013) # remove the first few years because very few birds are recaptured and estimating survival in these years eats up a lot of parameters.
 glimpse(clim)
 
 # make two time groups for recapture
 recap_group <- data.frame(time = 2013:2024) %>% 
-  mutate(recap_group = ifelse(time > 2019, "A", "B"))
+  mutate(recap_group = ifelse(time > 2019, "A", "B")) # recapture effort was much higher 2020-onwards, so test whether two groups are good to include as covariates.
 
 
 ## Check for collinearity -----------------------------------------------------
@@ -55,7 +54,7 @@ m <- cor(clim)
 test <-  cor.mtest(clim, conf.level = 0.95)
 corrplot(m, p.mat = test$p, sig.level = 0.1, order = 'hclust')
 # any circle not crossed is a pair of collinear variables.
-# time and SST_w are collinear, but we will ignore this because we
+# time and SST_w are collinear, but we will ignore this because we need to test both.
 
 # see XX_archive script to fix collinear covariates
 
@@ -94,7 +93,7 @@ test3sm(ch, n)
 
 ## Checking Variance Inflation Factor (c-hat) ---------------------------------
 
-# c-hat can help adjust model output based on extra-binomial noise (more variance in capture history data) or overdispersion (larger-than-normal discrepancies between observed and predicted values for the binomial model).
+# c-hat can help adjust model output based on extra-binomial noise (more variance in capture history data than expected) or overdispersion (larger-than-normal discrepancies between observed and predicted values for the binomial model).
 # here, an estimation of c-hat is Chi2 / df, and is valid for time-dependent models. (which i initially tested here)
 # which is essentially the Chi2 and df from the overall_CJS call just above.
 
@@ -113,6 +112,7 @@ t3_df <- test3sr(ch, n)$test3sr[2]
 # here we have c-hat << 1, which is likely because of small sample size.
 # underdispersion is rare, and there doesn't seem to be either 1. a biological reason for it or 2. a fix for it.
 # for this reason, we will set c-hat to 1 and just move on.
+# see Lebreton 2012, Lampo 2017 and Robertson 2016 for explanations/examples.
 
 
 ## Test reference models ------------------------------------------------------
@@ -193,14 +193,14 @@ model.combos <- list(
   list(phi = phi.formulas$quadratic, p = p.formulas$full_time)    # 20
 )
 
-# Initialize a list to hold models
+# initialize a list to hold models
 models <- list()
 
 # create a folder to store all outputs
 dir_name <- paste0("data/rmark_outputs/reference_models/", today())
 dir.create(path = dir_name)
 
-# Loop through model combinations
+# loop through model combinations
 for (i in seq_along(model.combos)) {
   models[[paste0("model", i)]] <- mark(
     data = sbsh_process,
@@ -224,6 +224,27 @@ reference_model_set # this ranks the reference models by AICc, telling us the Ph
 saveRDS(reference_model_set, paste0(dir_name, "/reference_models_table.rds"))
 
 reference_model_set <- readRDS(paste0(dir_name, "/reference_models_table.rds"))
+
+
+
+# Table 1. Reference models
+table_data <- reference_model_set %>%
+  select(Phi, p, npar, AICc, DeltaAICc, weight, Deviance) %>%
+  mutate(
+    AICc      = round(AICc, 2),
+    DeltaAICc = round(DeltaAICc, 2),
+    weight    = ifelse(weight < 0.001, "<0.001", round(weight, 3)),
+    Deviance  = round(Deviance, 2)
+  )
+
+table_data %>%
+  kbl(
+    col.names = c("Survival (φ)", "Recapture (p)", "K", "AICc", "ΔAICc", "AICc weight", "Deviance"),
+    align     = c("l", "l", "c", "c", "c", "c", "c"),
+    booktabs  = TRUE
+  ) %>%
+  kable_classic(full_width = FALSE, html_font = "Arial") %>%
+  row_spec(max(which(table_data$DeltaAICc < 2)), extra_css = "border-bottom: 1px dashed black;")
 
 
 ## Test covariate models ------------------------------------------------------
@@ -250,10 +271,6 @@ sbsh_ddl <- make.design.data(sbsh_process)
 
 # add climate indices values to the design data
 sbsh_ddl$Phi <- merge_design.covariates(sbsh_ddl$Phi, clim_std) # climate indices are assumed to influence survival Phi, not recapture probability
-
-# add recapture group to the design data
-sbsh_ddl$p <- merge_design.covariates(sbsh_ddl$p, recap_group)
-
 
 # create sets of linear and quadratic survivals to test
 glimpse(sbsh_ddl)
@@ -305,9 +322,30 @@ for (cov in covariates) {
 }
 test_model_set <- model.table(results, use.AIC = FALSE) # as above, use.AIC = FALSE to use AICc (better for small sample sizes)
 test_model_set # these are our tests models
-saveRDS(test_model_set, "data/rmark_outputs/reference_models/test_models_table.rds")
+saveRDS(test_model_set, "data/rmark_outputs/covariate_models/test_models_table.rds")
 
-test_model_set <- readRDS("data/rmark_outputs/reference_models/test_models_table.rds")
+test_model_set <- readRDS("data/rmark_outputs/covariate_models/test_models_table.rds")
+
+
+# Table 2. Covariate models
+table_data <- test_model_set %>%
+  select(Phi, p, npar, AICc, DeltaAICc, weight, Deviance) %>%
+  mutate(
+    AICc      = round(AICc, 2),
+    DeltaAICc = round(DeltaAICc, 2),
+    weight    = ifelse(weight < 0.001, "<0.001", round(weight, 3)),
+    Deviance  = round(Deviance, 2)
+  )
+
+table_data %>%
+  kbl(
+    col.names = c("Survival (φ)", "Recapture (p)", "K", "AICc", "ΔAICc", "AICc weight", "Deviance"),
+    align     = c("l", "l", "c", "c", "c", "c", "c"),
+    booktabs  = TRUE
+  ) %>%
+  kable_classic(full_width = FALSE, html_font = "Arial") %>%
+  row_spec(which(table_data$DeltaAICc < 2), bold = TRUE) %>%
+  row_spec(max(which(table_data$DeltaAICc < 2)), extra_css = "border-bottom: 1px dashed black;")
 
 
 ## Hypothesis testing ---------------------------------------------------------
@@ -324,7 +362,6 @@ Dev_t   <- reference_model_set[reference_model_set$Phi == "~factor(time)" & refe
 # Number of parameters
 J <- test_model_set[1,]$npar # number of parameters in covariate model
 n <- reference_model_set[reference_model_set$Phi == "~factor(time)" & reference_model_set$p == "~factor(time)",]$npar # number of survival estimates in Ft (i.e number of parameters because it's the fully-time-dependent model)
-
 
 
 # 1. we'll test the following null hypothesis: " the climate covariate model fits the data as well as the time-dependent model. "
@@ -346,51 +383,31 @@ p_value
 
 
 # 3. this is an alternate null hypothesis to 2. " the climate covariate has no effect on survival. ", in case your 1. was significant.
-# c_hat <- (Dev_co - Dev_t) / (n - J)
-# F_stat <- ((Dev_cst - Dev_co) / (J - 1)) / c_hat
-# df1 <- J - 1
-# df2 <- n - J
-# p_value <- pf(F_stat, df1, df2, lower.tail = FALSE)
-# 
-# cat("F-statistic =", F_stat, "\n")
-# cat("Degrees of freedom =", df1, "and", df2, "\n")
-# cat("p-value =", p_value, "\n")
-# # the output is corrected for multiple testing... if p>0.05, so we reject this null hypothesis, the climate covariate has an effect on survival.
+c_hat <- (Dev_co - Dev_t) / (n - J)
+F_stat <- ((Dev_cst - Dev_co) / (J - 1)) / c_hat
+df1 <- J - 1
+df2 <- n - J
+p_value <- pf(F_stat, df1, df2, lower.tail = FALSE)
+
+cat("F-statistic =", F_stat, "\n")
+cat("Degrees of freedom =", df1, "and", df2, "\n")
+cat("p-value =", p_value, "\n")
+# the output is corrected for multiple testing... if p>0.05, so we reject this null hypothesis, the climate covariate has an effect on survival.
 
 
-
-# select based on information theory, AIC values...
-
-# reference models AIC
-AICc_ft   <- reference_model_set[reference_model_set$Phi == "~factor(time)" & reference_model_set$p == "~factor(time)", "AICc"]
-AICc_fcst <- reference_model_set[reference_model_set$Phi == "~1" & reference_model_set$p == "~1", "AICc"]
-
-# below compares every model's AIC with the constant model (fcst) and the time-dependent model (ft)
-# if the delta_AICc > 2, it means the model is substantially better than the fcst/ft models
-info_theory <- test_model_set %>% 
-  dplyr::select(Phi, AICc) %>% 
-  mutate( # delta AIC
-    delta_AICc_co_cst = AICc - AICc_fcst,
-    delta_AICc_co_t = AICc - AICc_ft
-         ) %>% 
-  # we'll test linear terms first
-  mutate(
-    support_co_cst = ifelse(delta_AICc_co_cst < -2, "linear covariate support", "no support"),
-    support_co_t = ifelse(delta_AICc_co_t <= 2, "linear covariate support", "no support"),
-  ) %>% 
-  glimpse()
+# Grosbois 2008 also does an Information Theory selection, which I don't understand and didn't do.
 
 
-## obtain survival estimates --------------------------------------------------
+## Obtain survival estimates --------------------------------------------------
 
 test_model_set[[1]][1] # best model
 best_model <- results$AO_jun_jul_aug_linear # extract the best model
 
-# extract survival estimates
+# extract all survival estimates
 phi_estimates <- get.real(best_model, "Phi", vcv = TRUE) # extract phi
 phi_estimates$estimates  # includes estimate, se, lcl, ucl
 
-# now we need to obtain survival estimates
+# now weneed to obtain survival estimates
 phi_unique <- phi_estimates$estimates %>%
   distinct(par.index, .keep_all = TRUE) %>%
   arrange(par.index) %>%
@@ -398,38 +415,63 @@ phi_unique <- phi_estimates$estimates %>%
 
 phi_unique
 
+# Figure 1. Survival and AO.
+ao_df <- clim[clim$time %in% 2013:2023, c("time", "AO_jun_jul_aug")]
+ao_min <- min(ao_df$AO_jun_jul_aug)
+ao_max <- max(ao_df$AO_jun_jul_aug)
+
 ggplot(phi_unique, aes(x = year, y = estimate)) +
+  geom_ribbon(aes(ymin = lcl, ymax = ucl), fill = "lightgray", alpha = 0.5) +
   geom_line(size = 1) +
-  geom_ribbon(aes(ymin = lcl, ymax = ucl), alpha = 0.5) +
-  scale_x_continuous(breaks = c(2013:2023)) +
-  scale_y_continuous(limits = c(0, 1)) +
+  geom_line(data = ao_df, aes(x = time, y = (AO_jun_jul_aug - ao_min) / (ao_max - ao_min)),
+            colour = "steelblue", linetype = "dashed", size = 1) +
+  scale_x_continuous(breaks = 2013:2023) +
+  scale_y_continuous(
+    limits = c(0, 1),
+    sec.axis = sec_axis(
+      ~ . * (ao_max - ao_min) + ao_min,
+      name = "Summer AO index"
+    )
+  ) +
   labs(x = "Year", y = "Annual survival probability") +
-  theme_light()
-
+  theme_light() +
+  theme(panel.grid.minor.x = element_blank()) +
+  theme(
+    panel.grid.minor.x = element_blank(),
+    axis.title.y.right = element_text(colour = "steelblue"),
+    axis.text.y.right = element_text(colour = "steelblue")
+  )
 mean(phi_unique$estimate) # 0.8368935. yoikes
-
+mean(phi_unique$se) # +/- 0.069
+phi_unique %>% summarise(mean_lcl = mean(lcl), mean_ucl = mean(ucl))
 
 # extract recapture estimates
 p_estimates <- get.real(best_model, "p", vcv = TRUE) # extract phi
 p_estimates$estimates  # includes estimate, se, lcl, ucl
 
+
 # now we need to obtain survival estimates
+# Table 3. recapture estimates
 p_unique <- p_estimates$estimates %>%
   distinct(par.index, .keep_all = TRUE) %>%
   arrange(par.index) %>%
   mutate(year = 2013:(2013 + n() - 1))  # add readable year labels
-
 p_unique
 
-ggplot(p_unique, aes(x = year, y = estimate)) +
-  geom_point(size = 3) +
-  geom_errorbar(aes(ymin = lcl, ymax = ucl), width = 0.3) +
-  scale_y_continuous(limits = c(0, 1)) +
-  labs(x = "Year", y = "Annual recapture probability") +
-  theme_minimal()
-
-mean(p_unique$estimate) # 0.09477007
-
+p_unique %>%
+  mutate(
+    year     = as.integer(time),
+    estimate = round(estimate, 3),
+    se       = round(se, 3)
+  ) %>%
+  select(year, estimate, se) %>%
+  `rownames<-`(NULL) %>%
+  kbl(
+    col.names = c("Year", "Recapture probability", "SE"),
+    align     = c("c", "c", "c"),
+    booktabs  = TRUE
+  ) %>%
+  kable_classic(full_width = FALSE, html_font = "Arial")
 
 
 ## Bayesian approach ----------------------------------------------------------
@@ -453,16 +495,10 @@ glimpse(sbsh_ddl)
 # we're going to test all the models that were within 2 AIC points of each other, to see the amount of support for each
 top_covariates <- test_model_set$Phi[test_model_set$DeltaAICc < 2]
 top_covariates <- gsub("~", "", top_covariates)
-
 top_covariates
 
 covariate_list <- list(
-  
   AO_jun_jul_aug = as.matrix(sbsh_ddl$Phi[,"AO_jun_jul_aug"])
-  # temp_quad   = cbind(
-  #   sbsh_ddl$Phi[,"temp_jun_oct"],
-  #   sbsh_ddl$Phi[,"temp_jun_oct"]^2
-  # )
 )
 
 model_names <- names(covariate_list); model_names
@@ -478,8 +514,6 @@ ch_matrix <- as.matrix(ch)
 # important thing to understand here is: 
 # the model will use the matrix y (the observed recaptures) to estimate whether the individual is alive or not when we don't recapture it (in matrix z, the 'latent state')
 # for example, in capture history '1010', it will estimate how likely it is that the individual survived years 2 and 4, given it survived year 3. 
-
-
 writeLines("model {
   
   beta0 ~ dnorm(0, 1)  # Prior for intercept on survival
@@ -508,18 +542,14 @@ writeLines("model {
     }
   }
 }", "data/JAGS_models/cjs_model.txt")
-
-
 results <- list() # initiate an object to store all results.
 
-set.seed(123)
 
-# THIS LOOP TAKES A WHILE TO RUN
+set.seed(123)
 for (i in seq_along(covariate_list)) { # for each covariate model... 
 
   X <- covariate_list[[i]] # ...select the covariate in the list... 
-  if (i %in% c(2, 4)) {X[,2] <- X[,2] - mean(X[,2])} # centre the temp quad
-  
+
   if (is.vector(X)) X <- matrix(X, ncol = 1) # convert to a matrix format, if it's a vector it doesn't work 
   
   jags_data_i <- list( # this is essentially all the data that the model is going to use 
@@ -549,7 +579,11 @@ for (i in seq_along(covariate_list)) { # for each covariate model...
     }
   
   # Parameters to save 
-  params <- c("beta0", "beta", "alpha", "deviance") 
+  params <- c("beta0", # intercept for survival (logit scale)
+              "beta", # slope of the covariate effect (logit scale)
+              "alpha", # recapture probability
+              "deviance" # model fit (lower is better)
+              ) 
   
   # Run JAGS 
   fit <- jags(data = jags_data_i, 
@@ -566,17 +600,7 @@ for (i in seq_along(covariate_list)) { # for each covariate model...
 names(results)
 
 # each element in the 'results' list is a CJS model, the performance of which we're assessing below.
-plot(results$temp_jun_oct) # all good
-plot(results$temp_quad) # all good
-
-plot(results$PDO_jul_aug_sep) # all good
-plot(results$pdo_quad) # all good
-
-plot(results$AAO_jul_aug_sep) # all good
-plot(results$AAO_quad) # all good
-
-plot(results$ENSO_jul_aug_sep) # all good
-plot(results$enso_quad) # all good
+plot(results$AO_jun_jul_aug) # all good
 
 
 # we are looking for each chain's values (red, green and blue lines) to overlap well. here, they're all looking good (yay!)
@@ -584,7 +608,7 @@ plot(results$enso_quad) # all good
 
 ## obtain the converged data --------------------------------------------------
 
-dat <- results[c(1:7)] # remove the enso_quad which doesnt want to converge.
+dat <- results#[c(1:7)] # remove the enso_quad which doesnt want to converge.
 
 # see which covariates are highly likely to affect survival
 extract_beta_ci <- function(model_name, model_result) {
@@ -620,183 +644,4 @@ ggplot(beta_summaries, aes(x = mean, y = model, color = sig)) +
   theme_minimal()
 
 
-# see the survival estimate for all models 
-
-extract_model_parameters <- function(model_result) {
-  summary_df <- model_result$summary %>%
-    as.data.frame() %>%
-    tibble::rownames_to_column("parameter") %>%
-    filter(grepl("^beta0$|^beta$|^beta\\[\\d+\\]$|^alpha$|^alpha\\[\\d+\\]$", parameter)) %>%
-    select(parameter, mean, sd, `2.5%`, `97.5%`)
-  
-  return(summary_df)
-}
-
-model_exclude <- c("enso_quad")
-dat <- dat[!names(dat) %in% model_exclude]
-subset_results <- lapply(dat, extract_model_parameters)
-
-
-parameter_summary <- bind_rows(subset_results, .id = "model")
-
-print(parameter_summary)
-
-beta0_all <- parameter_summary %>% 
-  dplyr::filter(parameter == "beta0") %>% 
-  mutate(beta0_t = 1 / (1 + exp(-mean)) )
-
-
-# fit models again to get survival
-get_phi <- function(model) {
-  phi_df <- model$results$real
-  phi_df <- phi_df[grepl("^Phi", rownames(phi_df)), ]
-  return(phi_df)
-}
-
-match <- data.frame(
-  model = sort(names(results)),
-  covariate = sort(top_covariates[!top_covariates %in% c("ENSO_jul_aug_sep + ENSO_jul_aug_sep2")])
-)
-best_mod <- list()
-for (COV in names(results)) {
-  i <- match(COV, names(results))
-  cov <- match[i, "covariate"]
-  
-  best_mod[[COV]] <- mark(data = sbsh_process, ddl  = sbsh_ddl,
-                          model.parameters = list(Phi = list(formula = as.formula(paste("~", cov))),
-                                                  p   = list(formula = ~ factor(time))),
-                          silent = TRUE,
-                          filename   = paste0("data/rmark_outputs/best_models/", COV),
-                          model.name = paste0("model_", COV)
-  )
-}
-
-
-
-
-
-# below is archive
-
-# Get only the Phi rows from each model's real parameter estimates
-get_phi <- function(model) {
-  phi_df <- model$results$real
-  phi_df <- phi_df[grepl("^Phi", rownames(phi_df)), ]
-  return(phi_df)
-}
-summary(best_mod1)
-
-real_df <- best_mod3$results$real
-phi_df <- real_df[grepl("^Phi", rownames(real_df)), ]
-phi_df$year <- as.numeric(sub(".*t", "", rownames(phi_df)))
-phi_plot <- phi_df[!duplicated(phi_df$year), ]
-ggplot(phi_plot, aes(x = year, y = estimate)) +
-  geom_ribbon(aes(ymin = lcl, ymax = ucl),
-              fill = "steelblue", alpha = 0.3) +
-  geom_line(color = "steelblue", linewidth = 1) +
-  geom_point(size = 2) +
-  scale_y_continuous(limits = c(0, 1)) +
-  labs(
-    x = "Year",
-    y = expression(" Annual survival probability ("*Phi*")"),
-    title = "SST (SON, quad), Estimated annual survival with 95% confidence intervals"
-  ) +
-  theme_classic()
-
-
-phi1 <- get_phi(best_mod1)
-phi2 <- get_phi(best_mod2)
-phi3 <- get_phi(best_mod3)
-phi4 <- get_phi(best_mod4)
-phi5 <- get_phi(best_mod5)
-phi6 <- get_phi(best_mod6)
-
-
-n_years <- nrow(phi1)
-years <- 2013:2023
-
-phi1$year <- years
-phi2$year <- years
-phi3$year <- years
-phi4$year <- years
-phi5$year <- years
-phi6$year <- years
-
-
-surv_df <- data.frame(
-  year = years,
-  model1 = phi1$estimate,
-  model2 = phi2$estimate,
-  model3 = phi3$estimate,
-  model4 = phi4$estimate,
-  model5 = phi5$estimate,
-  model6 = phi6$estimate
-)
-
-# Calculate average survival per year across models
-surv_df <- surv_df %>%
-  mutate(mean_survival = rowMeans(select(., model1, model2)))
-
-
-ggplot(surv_df, aes(x = year)) +
-  geom_point(aes(y = model1), color = "lightblue") +
-  geom_line(aes(y = model1), color = "lightblue") +
-  
-  geom_point(aes(y = model2), color = "lightblue2") +
-  geom_line(aes(y = model2), color = "lightblue2") +
-  
-  
-  geom_point(aes(y = model3), color = "lightblue3") +
-  geom_line(aes(y = model3), color = "lightblue3") +
-
-  geom_line(aes(y = mean_survival, color = "Average"), color = "red", size = 1.2) +
-  ylim(0, 1) +
-  labs(
-    title = paste0("average survival = ", 
-                  round(mean(mean(surv_df$model1), mean(surv_df$model2)
-    ), 2)
-    ),
-    x = "Year",
-    y = "Survival (Φ)"
-  ) +
-  theme_minimal()
-
-
-
-# for later :: parameter averages
-sbsh.mod.avg <- model.average(best_mod, vcv = TRUE)
-sbsh.mod.avg.Phi <- model.average(sbsh.results, "Phi", vcv = TRUE)
-sbsh.mod.avg.p <- model.average(sbsh.results, "p", vcv = TRUE)
-
-
-sbsh.mod.avg$estimates
-sbsh.mod.avg.Phi$estimates
-sbsh.mod.avg.p$estimates
-
-# survival estimate averaged over all models
-plot(sbsh.mod.avg.Phi$estimates$time, sbsh.mod.avg.Phi$estimates$estimate,
-     ylim = c(0, 1),
-     pch = 19,
-     xlab = "Time",
-     ylab = "Estimate",
-     main = "yikes",
-     type = "b")
-abline(h = 0.94)
-
-
-summary_table <- sbsh.mod.avg.Phi$estimates %>%
-  group_by(Time) %>%
-  summarise(Average_Survival = mean(estimate, na.rm = TRUE)) %>%
-  arrange(Time)
-
-print(summary_table)
-
-# extract best model
-Phi.AAOp.Temp <- list(formula = ~AAO_prev_yr_sep_oct_nov + temp_sep_oct_nov) 
-p.group <- list(formula = ~group) 
-
-sbsh.best <- mark(sbsh_process, sbsh_ddl,
-                  model.parameters = list(Phi = Phi.AAOp.Temp,
-                                          p = p.group),
-                  filename = "data/mark_outputs/best")
-summary(sbsh.best)
 ### END ###
